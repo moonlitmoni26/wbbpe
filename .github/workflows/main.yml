@@ -1,0 +1,54 @@
+name: Build and Deploy Multiple mdBooks
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install mdBook
+      run: cargo install mdbook
+
+    # Build all books
+    - name: Build Books
+      run: |
+        mdbook build books/child_development_and_pedagogy
+        mdbook build books/language1_bengali
+        mdbook build books/language2_english
+        mdbook build books/mathematics
+        mdbook build books/environmental_studies
+
+
+    # Copy books to the html directory
+    - name: Copy books to html directory
+      run: |
+        mkdir -p html/books
+        cp -r books/child_development_and_pedagogy/book html/books/child_development_and_pedagogy
+        cp -r books/language1_bengali/book html/books/language1_bengali
+        cp -r books/language2_english/book html/books/language2_english
+        cp -r books/mathematics/book html/books/mathematics
+        cp -r books/environmental_studies/book html/books/environmental_studies
+
+    # Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./html
